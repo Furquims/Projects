@@ -56,14 +56,15 @@ void uiStep(void) {
 
 
 #define MENU_ITEMS 4
-const char *menu_strings[MENU_ITEMS] = { "First Line", "Second Item", "3333333", "abcdefg" };
+#define N_MENUS 2
+const char *menu_strings[N_MENUS][MENU_ITEMS] = {{"uno", "2", "tres", "quatorze"}, {"First Line", "Second Item", "3333333", "abcdefg"}};
 
 uint8_t menu_current = 0;
 uint8_t menu_redraw_required = 0;
 uint8_t last_key_code = KEY_NONE;
 
-
-void drawMenu(void) {
+// Normalmente usa-se int, porque as funções deveriam retornar 1 em caso de sucesso ou 0 em caso de falha.
+int drawMenu(int n) {
   uint8_t i, h;
   u8g_uint_t w, d;
 
@@ -74,7 +75,7 @@ void drawMenu(void) {
   h = u8g.getFontAscent()-u8g.getFontDescent();
   w = u8g.getWidth();
   for( i = 0; i < MENU_ITEMS; i++ ) {
-    d = (w-u8g.getStrWidth(menu_strings[i]))/2;
+    d = (w-u8g.getStrWidth(menu_strings[n][i]))/2;
     u8g.setDefaultForegroundColor();
     if ( i == menu_current ) {
       u8g.drawBox(0, i*h+1, w, h);
@@ -82,9 +83,14 @@ void drawMenu(void) {
     }
     u8g.drawStr(d, i*h, menu_strings[i]);
   }
+  return 1;
 }
 
-void updateMenu(void) {
+/*
+Coloquei um int e retorno pra avisar a troca de tela usando a tecla SELECT, isso será tratado no loop.
+*/
+
+int updateMenu(void) {
   if ( uiKeyCode != KEY_NONE && last_key_code == uiKeyCode ) {
     return;
   }
@@ -103,9 +109,11 @@ void updateMenu(void) {
       menu_current--;
       menu_redraw_required = 1;
       break;
+    case KEY_SELECT:
+      return 1;
   }
+  return 0;
 }
-
 
 void setup() {
   // rotate screen, if required
@@ -116,17 +124,18 @@ void setup() {
 }
 
 void loop() {  
-
+  int n_menu = 0;
   uiStep();                                     // check for key press
     
   if (  menu_redraw_required != 0 ) {
     u8g.firstPage();
     do  {
-      drawMenu();
+      drawMenu(n_menu); // Passando qual o menu será mostrado.
     } while( u8g.nextPage() );
     menu_redraw_required = 0;
   }
 
-  updateMenu();                            // update menu bar
-  
+  if ( updateMenu() ){                            // update menu bar
+    n_menu = (n_menu + 1) % N_MENUS;
+  }
 }
