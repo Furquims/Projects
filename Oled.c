@@ -81,7 +81,7 @@ int drawMenu(int n) {
       u8g.drawBox(0, i*h+1, w, h);
       u8g.setDefaultBackgroundColor();
     }
-    u8g.drawStr(d, i*h, menu_strings[i]);
+    u8g.drawStr(d, i*h, menu_strings[n][i]);
   }
   return 1;
 }
